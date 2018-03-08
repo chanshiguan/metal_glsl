@@ -25,6 +25,7 @@ vertex ColorInOut vertexShader(device float4 *positions [[ buffer(0) ]],
     return out;
 }
 
+//http://glslsandbox.com/e#45581.0より
 fragment float4 fragmentShader(ColorInOut      in[[ stage_in ]],
                                constant float  &time[[ buffer(0) ]],
                                constant float2 &resolution [[buffer(1)]])
@@ -41,9 +42,10 @@ fragment float4 fragmentShader(ColorInOut      in[[ stage_in ]],
     //uvは縦横比を正方形に正規化した座標
     float2 uv = float2(u,v);
     
-    
-    
-    float4 color = float4(u,v,0,1);
-    return color;
+    float2 o = p.xy - r/2.;
+    o = float2(length(o) / r.y - .3, atan2(o.y,o.x));
+    float4 s = .1*cos(1.6*float4(0,1,2,3) + time + o.y + asin(sin(o.x)) * cos(sin(time)*2.)),
+    e = s.yzwx,
+    f = min(o.x-s,e-o.x);
+    return  dot(clamp(f*r.y,0.,1.), 40.*(s-e)) * (s-.1) - f;
 }
-
