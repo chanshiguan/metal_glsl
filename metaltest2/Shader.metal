@@ -25,18 +25,7 @@ vertex ColorInOut vertexShader(device float4 *positions [[ buffer(0) ]],
     return out;
 }
 
-//http://glslsandbox.com/e#45710.0より
-float2 tile(float2 _st, float _zoom){
-    _st *= _zoom;
-    return fract(_st);
-}
-
-float box(float2 _st, float2 border){
-    float2 uv = step(border, _st);
-    return uv.x*uv.y;
-}
-
-
+//http://glslsandbox.com/e#45581.0より
 fragment float4 fragmentShader(ColorInOut      in[[ stage_in ]],
                                constant float  &time[[ buffer(0) ]],
                                constant float2 &resolution [[buffer(1)]])
@@ -53,26 +42,10 @@ fragment float4 fragmentShader(ColorInOut      in[[ stage_in ]],
     //uvは縦横比を正方形に正規化した座標
     float2 uv = float2(u,v);
     
-    float2 st = uv;
-    
-    float tileScaling = 16.;
-    
-    
-    float tileCount = tileScaling * tileScaling;
-    float tileId = 1. + floor(st.x * tileScaling) + tileScaling * floor(st.y * tileScaling);
-    
-    // Divide the space in 256
-    st = tile(st, tileScaling);
-    
-    // Draw the tile
-    float modifier = tileId / tileCount;
-    float3 color = float3(
-                          abs(cos(modifier * time)),
-                          sin(modifier * time * .8),
-                          fract(modifier * time * .5));
-    float isActive = abs(sin(time * 1.3 * modifier)) * box(st, float2(0.05));
-    
-    return float4(float3(isActive * color),1.0);
-    
+    float2 o = p.xy - r/2.;
+    o = float2(length(o) / r.y - .3, atan2(o.y,o.x));
+    float4 s = .1*cos(1.6*float4(0,1,2,3) + time + o.y + asin(sin(o.x)) * cos(sin(time)*2.)),
+    e = s.yzwx,
+    f = min(o.x-s,e-o.x);
+    return  dot(clamp(f*r.y,0.,1.), 40.*(s-e)) * (s-.1) - f;
 }
-
